@@ -7,9 +7,12 @@ setup(
     author="Lenar Imamutdinov",
     author_email="lenar.imamutdinov@gmail.com",
     py_modules=['flask_nmail'],
-    zip_safe=True,
+    zip_safe=False,
     include_package_data=True,
     license="MIT",
     description="Flask mail sending with benefits",
-    long_description=open("README.md").read()
+    long_description=open("README.md").read(),
+    install_requires=[
+        'Flask'
+    ]
 )
