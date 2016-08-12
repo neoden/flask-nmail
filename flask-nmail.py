@@ -26,7 +26,7 @@ class Mail:
         self.sink = sink or app.config.get('MAIL_SINK')
         self.default_sender = default_sender or app.config.get('MAIL_DEFAULT_SENDER') or 'noreply@example.com'
 
-    def _extract_statics(self, html, static_dir=None):
+    def _extract_statics(self, html):
         """
         Scan HTML for images from /static. When found src is replaced with reference 
         to email attachment.
@@ -49,7 +49,7 @@ class Mail:
                 cid = 'image_{}'.format(uuid.uuid4().hex)
                 images[cid] = {
                     'original_path': src,
-                    'absolute_path': os.path.join(static_dir or self.app.root_path, src[1:]),
+                    'absolute_path': os.path.join(self.app.root_path, src[1:]),
                 }
 
         for cid, v in images.items():
