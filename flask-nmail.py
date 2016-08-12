@@ -11,20 +11,29 @@ from email.header import Header
 from email.utils import formataddr, parseaddr
 from email.encoders import encode_quopri
 
+from flask import current_app
+
 
 class Mail:
     def __init__(self, app=None, **kwargs):
+        self.app = app
         if app:
             self.init_app(app, **kwargs)
 
     def init_app(self, app, enabled=None, server=None, port=None, sink=None, default_sender=None):
-        self.app = app
         self.enabled = enabled or app.config.get('MAIL_ENABLED') or True
         self.server = server or app.config.get('MAIL_SERVER') or '127.0.0.1'
         self.port = port or app.config.get('MAIL_PORT') or 25
         # address to send everything to (for testing)
         self.sink = sink or app.config.get('MAIL_SINK')
         self.default_sender = default_sender or app.config.get('MAIL_DEFAULT_SENDER') or 'noreply@example.com'
+
+    @property
+    def _app(self):
+        if hasattr(self, 'app'):
+            return self.app
+        else:
+            return current_app
 
     def _extract_statics(self, html):
         """
@@ -49,7 +58,7 @@ class Mail:
                 cid = 'image_{}'.format(uuid.uuid4().hex)
                 images[cid] = {
                     'original_path': src,
-                    'absolute_path': os.path.join(self.app.root_path, src[1:]),
+                    'absolute_path': os.path.join(self._app.root_path, src[1:]),
                 }
 
         for cid, v in images.items():
@@ -127,10 +136,10 @@ class Mail:
                     [self._address(r) for r in recipients],
                     msgRoot.as_string()
                 )
-                if self.app.config.get('DEBUG'):
-                    app.logger.debug('Email sent to: {}'.format(repr([self._address(r) for r in recipients])))
+                if self._app.config.get('DEBUG'):
+                    self._app.logger.debug('Email sent to: {}'.format(repr([self._address(r) for r in recipients])))
             except smtplib.SMTPRecipientsRefused:
-                self.app.logger.error('Email sending failed for: {}'.format(repr(recipients)))
+                self._app.logger.error('Email sending failed for: {}'.format(repr(recipients)))
 
 
     def send_email(self, html_body, text_body, subject, recipients, sender=None, individual_emails=False):
